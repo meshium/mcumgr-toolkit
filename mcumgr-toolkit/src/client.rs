@@ -35,6 +35,9 @@ use crate::{
 #[cfg(feature = "ble")]
 use crate::transport::ble::{BleIdentifier, BleRuntimeError};
 
+#[cfg(target_os = "linux")]
+use crate::transport::ethernet::{EthernetTransport, MacAddress};
+
 /// The default SMP frame size of Zephyr.
 ///
 /// Matches Zephyr default value of [MCUMGR_TRANSPORT_NETBUF_SIZE](https://github.com/zephyrproject-rtos/zephyr/blob/v4.2.1/subsys/mgmt/mcumgr/transport/Kconfig#L40).
@@ -251,6 +254,36 @@ pub enum UdpError {
     #[error("Failed to open UDP socket")]
     #[diagnostic(code(mcumgr_toolkit::udp::io_error))]
     Io(#[from] io::Error),
+}
+
+/// Possible error values of [`MCUmgrClient::new_from_ethernet`].
+#[cfg(target_os = "linux")]
+#[derive(Error, Debug, Diagnostic)]
+pub enum EthernetError {
+    /// The process is not allowed to open raw sockets
+    #[error("Not permitted to open a raw Ethernet socket")]
+    #[diagnostic(
+        code(mcumgr_toolkit::ethernet::permission_denied),
+        help(
+            "raw sockets require the CAP_NET_RAW capability, e.g. `sudo setcap cap_net_raw+ep <executable>`"
+        )
+    )]
+    PermissionDenied(#[source] io::Error),
+    /// An I/O error occurred while opening the raw Ethernet socket
+    #[error("Failed to open raw Ethernet socket")]
+    #[diagnostic(code(mcumgr_toolkit::ethernet::io_error))]
+    Io(#[source] io::Error),
+}
+
+#[cfg(target_os = "linux")]
+impl From<io::Error> for EthernetError {
+    fn from(e: io::Error) -> Self {
+        if e.kind() == io::ErrorKind::PermissionDenied {
+            Self::PermissionDenied(e)
+        } else {
+            Self::Io(e)
+        }
+    }
 }
 
 /// Possible error values of [`MCUmgrClient::new_from_usb_serial`].
@@ -524,6 +557,40 @@ impl MCUmgrClient {
         log::debug!("Connecting to {addr} ...");
         Ok(Self {
             connection: Connection::new(UdpTransport::new(addr, timeout)?),
+            smp_frame_size: ZEPHYR_DEFAULT_SMP_FRAME_SIZE.into(),
+        })
+    }
+
+    /// Creates a Zephyr MCUmgr SMP client based on raw Ethernet frames.
+    ///
+    /// Only available on Linux. Requires the `CAP_NET_RAW` capability.
+    /// See [`transport::ethernet`](crate::transport::ethernet) for the frame format.
+    ///
+    /// # Arguments
+    ///
+    /// * `iface` - The name of the local network interface the device is connected to.
+    /// * `mac` - The MAC address of the device.
+    /// * `timeout` - The communication timeout.
+    ///
+    /// # Example
+    ///
+    /// ```no_run
+    /// # use mcumgr_toolkit::MCUmgrClient;
+    /// # use std::time::Duration;
+    /// # fn main() {
+    /// let mac = "02:00:00:00:00:01".parse().unwrap();
+    /// let mut client = MCUmgrClient::new_from_ethernet("eth0", mac, Duration::from_millis(1000)).unwrap();
+    /// # }
+    /// ```
+    #[cfg(target_os = "linux")]
+    pub fn new_from_ethernet(
+        iface: &str,
+        mac: MacAddress,
+        timeout: Duration,
+    ) -> Result<Self, EthernetError> {
+        log::debug!("Connecting to {mac} via {iface} ...");
+        Ok(Self {
+            connection: Connection::new(EthernetTransport::new(iface, mac, timeout)?),
             smp_frame_size: ZEPHYR_DEFAULT_SMP_FRAME_SIZE.into(),
         })
     }

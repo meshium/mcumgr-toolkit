@@ -202,6 +202,19 @@ class MCUmgrClient:
         * `timeout_ms` - The communication timeout, in ms.
         """
     @staticmethod
+    def ethernet(iface: builtins.str, mac: builtins.str, timeout_ms: builtins.int = 1000) -> MCUmgrClient:
+        r"""
+        Creates a new raw Ethernet based Zephyr MCUmgr SMP client.
+        
+        Only supported on Linux. Requires the `CAP_NET_RAW` capability.
+        
+        ### Arguments
+        
+        * `iface` - The local network interface the device is connected to, e.g. `eth0`.
+        * `mac` - The MAC address of the device, e.g. `02:00:00:00:00:01`.
+        * `timeout_ms` - The communication timeout, in ms.
+        """
+    @staticmethod
     def ble(identifier: builtins.str, timeout_ms: builtins.int = 1000) -> MCUmgrClient:
         r"""
         Creates a Zephyr MCUmgr SMP client based on a BLE connection.

@@ -131,6 +131,16 @@ OS/Application Info:
     Operating system:  Zephyr
 ```
 
+On Linux, devices can also be reached via raw Ethernet frames (EtherType `0x88B5`), without an IP stack:
+
+```none
+$ mcumgrctl --ethernet 02:00:00:00:00:01 --iface eth0
+Device alive and responsive.
+```
+
+> [!NOTE]
+> Raw Ethernet sockets require the `CAP_NET_RAW` capability, e.g. via `sudo setcap cap_net_raw+ep $(which mcumgrctl)`.
+
 For more information, run `mcumgrctl --help`.
 
 ### Autocomplete

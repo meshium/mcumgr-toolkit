@@ -52,6 +52,14 @@ pub enum CliError {
     #[error("Failed to open UDP socket")]
     #[diagnostic(code(mcumgrctl::udp))]
     UdpOpenFailed(#[from] UdpError),
+    #[cfg(target_os = "linux")]
+    #[error(transparent)]
+    #[diagnostic(transparent)]
+    EthernetOpenFailed(#[from] mcumgr_toolkit::client::EthernetError),
+    #[cfg(not(target_os = "linux"))]
+    #[error("The Ethernet transport is only supported on Linux")]
+    #[diagnostic(code(mcumgrctl::ethernet_unsupported))]
+    EthernetUnsupported,
     #[error("Failed to parse MCUboot image")]
     #[diagnostic(code(mcumgrctl::image_parse))]
     ImageParseFailed(#[from] ImageParseError),

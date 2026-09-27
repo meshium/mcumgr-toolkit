@@ -1,6 +1,6 @@
 #![deny(missing_docs)]
 #![deny(unreachable_pub)]
-#![forbid(unsafe_code)]
+#![deny(unsafe_code)]
 #![doc = include_str!("../README.md")]
 #![doc(issue_tracker_base_url = "https://github.com/Finomnis/mcumgr-toolkit/issues")]
 // That's just a bad lint, in many cases I want two ifs for readability

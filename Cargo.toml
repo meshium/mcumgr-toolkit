@@ -54,6 +54,8 @@ futures = "0.3.34"
 uuid = "1.26.1"
 either = "1.15.0"
 dbus = "0.9.12"
+socket2 = "0.6.5"
+libc = "0.2.189"
 
 [profile.release]
 strip = true

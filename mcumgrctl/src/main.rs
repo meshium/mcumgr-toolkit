@@ -131,6 +131,23 @@ fn cli_main(multiprogress: &MultiProgress) -> Result<(), CliError> {
             MCUmgrClient::new_from_udp(addr, Duration::from_millis(args.common.timeout))
                 .map_err(CliError::UdpOpenFailed)?,
         )
+    } else if let (Some(mac), Some(iface)) = (args.ethernet, args.iface.as_deref()) {
+        #[cfg(target_os = "linux")]
+        {
+            Client::new(
+                MCUmgrClient::new_from_ethernet(
+                    iface,
+                    mac,
+                    Duration::from_millis(args.common.timeout),
+                )
+                .map_err(CliError::EthernetOpenFailed)?,
+            )
+        }
+        #[cfg(not(target_os = "linux"))]
+        {
+            let _ = (mac, iface);
+            return Err(CliError::EthernetUnsupported);
+        }
     } else {
         Client::default()
     };

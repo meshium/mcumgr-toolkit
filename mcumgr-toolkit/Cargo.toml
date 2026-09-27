@@ -20,6 +20,8 @@ vendored-dbus = ["ble", "dep:dbus", "dbus/vendored"]
 
 [target.'cfg(target_os = "linux")'.dependencies]
 dbus = { workspace = true, optional = true }
+socket2 = { workspace = true, features = ["all"] }
+libc.workspace = true
 
 [dependencies]
 thiserror.workspace = true

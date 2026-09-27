@@ -13,6 +13,9 @@ pub mod ble;
 /// UDP based transport
 pub mod udp;
 
+/// Raw Ethernet based transport
+pub mod ethernet;
+
 #[derive(Debug, PartialEq, Clone, Copy)]
 struct SmpHeader {
     ver: u8,

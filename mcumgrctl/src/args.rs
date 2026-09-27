@@ -1,7 +1,7 @@
 use std::net::ToSocketAddrs;
 
 use clap::{ArgGroup, Args, Parser};
-use mcumgr_toolkit::transport::ble::BleIdentifier;
+use mcumgr_toolkit::transport::{ble::BleIdentifier, ethernet::MacAddress};
 use miette::IntoDiagnostic;
 
 use crate::groups::Group;
@@ -57,7 +57,7 @@ pub struct CommonArgs {
 #[command(disable_help_subcommand = true)]
 #[command(group(
     ArgGroup::new("transport")
-        .args(["serial", "usb_serial", "udp", "ble"])
+        .args(["serial", "usb_serial", "udp", "ble", "ethernet"])
 ))]
 #[command(group(
     ArgGroup::new("serial_transport")
@@ -95,6 +95,16 @@ pub struct App {
     /// If no argument provided, list all available BLE devices and exit.
     #[arg(long, verbatim_doc_comment, num_args = 0..=1, default_missing_value = None, value_name = BleIdentifier::help_name())]
     pub ble: Option<Option<BleIdentifier>>,
+
+    /// Use the device with the given MAC address via raw Ethernet as backend
+    ///
+    /// Linux only. Requires --iface and the CAP_NET_RAW capability.
+    #[arg(long, verbatim_doc_comment, requires = "iface", value_name = "MAC")]
+    pub ethernet: Option<MacAddress>,
+
+    /// Network interface to use with --ethernet (e.g. "eth0")
+    #[arg(long, requires = "ethernet")]
+    pub iface: Option<String>,
 
     /// Settings that customize runtime behaviour
     #[command(flatten)]

@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [Unreleased]
+
+### Changes
+
+- Add raw Ethernet (layer 2) transport layer support, Linux only
+    - SMP frames are sent as Ethernet payload with EtherType `0x88B5`
+    - Add `MCUmgrClient::new_from_ethernet` and `transport::ethernet::MacAddress`
+    - Python: `MCUmgrClient::ethernet`
+    - CLI: add `--ethernet <MAC>` and `--iface <IFACE>` flags
+    - Requires the `CAP_NET_RAW` capability
+- `mcumgr-toolkit` now denies instead of forbids `unsafe_code`,
+  to allow a single `unsafe` block for binding the raw Ethernet socket
+
+
 ## [0.17.1] - 2026-09-26
 
 ### Changes

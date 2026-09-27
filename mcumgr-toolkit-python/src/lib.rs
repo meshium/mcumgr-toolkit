@@ -142,6 +142,41 @@ impl MCUmgrClient {
         })
     }
 
+    /// Creates a new raw Ethernet based Zephyr MCUmgr SMP client.
+    ///
+    /// Only supported on Linux. Requires the `CAP_NET_RAW` capability.
+    ///
+    /// ### Arguments
+    ///
+    /// * `iface` - The local network interface the device is connected to, e.g. `eth0`.
+    /// * `mac` - The MAC address of the device, e.g. `02:00:00:00:00:01`.
+    /// * `timeout_ms` - The communication timeout, in ms.
+    ///
+    #[staticmethod]
+    #[pyo3(signature = (iface, mac, timeout_ms=::mcumgr_toolkit::DEFAULT_TIMEOUT_MS))]
+    fn ethernet(iface: &str, mac: &str, timeout_ms: u64) -> PyResult<Self> {
+        #[cfg(target_os = "linux")]
+        {
+            let mac = mac.parse().map_err(err_to_pyerr)?;
+            let client = ::mcumgr_toolkit::MCUmgrClient::new_from_ethernet(
+                iface,
+                mac,
+                Duration::from_millis(timeout_ms),
+            )
+            .map_err(err_to_pyerr)?;
+            Ok(MCUmgrClient {
+                client: Mutex::new(Some(Arc::new(client))),
+            })
+        }
+        #[cfg(not(target_os = "linux"))]
+        {
+            let _ = (iface, mac, timeout_ms);
+            Err(PyRuntimeError::new_err(
+                "The Ethernet transport is only supported on Linux",
+            ))
+        }
+    }
+
     /// Creates a Zephyr MCUmgr SMP client based on a BLE connection.
     ///
     /// ### Arguments
